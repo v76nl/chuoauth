@@ -52,8 +52,7 @@ chuoauth/
 │   ├── services/
 │   │   ├── google.ts          - 認可URL生成、コード交換、IDトークン検証
 │   │   ├── token.ts           - JWT署名、キーストア、JWKS出力
-│   │   ├── flow-state.ts      - ログイン中の状態を暗号化クッキーに封入
-│   │   └── student-id.ts      - メールアドレスから学籍番号を抽出
+│   │   └── flow-state.ts      - ログイン中の状態を暗号化クッキーに封入
 │   └── types/
 │       └── index.ts           - ペイロード型、リクエストスキーマ
 ├── scripts/
@@ -62,7 +61,6 @@ chuoauth/
 │   ├── app.test.ts            - エンドポイントの結合テスト
 │   ├── google.test.ts
 │   ├── token.test.ts
-│   ├── student-id.test.ts
 │   └── helpers.ts             - テスト用鍵生成
 ├── .env.example
 ├── Dockerfile
@@ -154,7 +152,6 @@ docker run --env-file .env -p 3000:3000 chuoauth
     "token": "eyJhbGciOiJSUzI1NiIs...",
     "user": {
         "email": "a0000000@g.chuo-u.ac.jp",
-        "student_id": "a0000000",
         "domain": "g.chuo-u.ac.jp"
     }
 }
@@ -166,15 +163,14 @@ GIS側のクライアントIDは `GOOGLE_CLIENT_ID` と同じものを使うこ�
 
 ### 発行JWT
 
-| クレーム     | 内容                                      |
-| ------------ | ----------------------------------------- |
-| `iss`        | `TOKEN_ISSUER`                            |
-| `sub`        | Googleアカウントの固有ID                  |
-| `aud`        | `TOKEN_AUDIENCE` (設定時のみ)             |
-| `iat`, `exp` | 発行時刻と有効期限 (10分)                 |
-| `email`      | メールアドレス                            |
-| `domain`     | 所属ドメイン (`hd`)                       |
-| `student_id` | 学籍番号。教職員など形式外の場合は `null` |
+| クレーム     | 内容                          |
+| ------------ | ----------------------------- |
+| `iss`        | `TOKEN_ISSUER`                |
+| `sub`        | Googleアカウントの固有ID      |
+| `aud`        | `TOKEN_AUDIENCE` (設定時のみ) |
+| `iat`, `exp` | 発行時刻と有効期限 (10分)     |
+| `email`      | メールアドレス                |
+| `domain`     | 所属ドメイン (`hd`)           |
 
 ヘッダーは `alg: RS256`、`typ: JWT`、`kid: JWT_KEY_ID`
 
@@ -193,7 +189,7 @@ const { payload } = await jwtVerify(token, jwks, {
     algorithms: ["RS256"]
     // audience: "chuoauth-discord" (TOKEN_AUDIENCE を設定した場合)
 });
-console.log(payload.email, payload.student_id);
+console.log(payload.email, payload.domain);
 ```
 
 ## 7. セキュリティ設計
@@ -203,4 +199,4 @@ console.log(payload.email, payload.student_id);
 - 認可コードフローでは state (CSRF)、nonce (IDトークンの差し替え防止)、PKCE (認可コード横取り防止) を併用する。これらと戻り先は `SESSION_SECRET` で暗号化 (A256GCM) したHttpOnlyクッキーに保持し、サーバー側にセッションストアは持たない
 - `redirect_uri` は許可リストとの完全一致のみ許可し、オープンリダイレクトを防ぐ
 - アクセスログにはクエリ文字列 (認可コード等) を出力しない
-- 学籍番号の抽出規則 (英字1文字 + 数字7桁) は `src/services/student-id.ts` の `STUDENT_ID_PATTERN` で調整できる
+- 本人確認に不要な個人情報は発行しない。学籍番号などはクレームに含めず、識別には `sub` を使う
