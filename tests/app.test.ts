@@ -178,9 +178,9 @@ describe("GET /auth/google/callback", () => {
             { issuer: "https://auth.example.com" }
         );
         expect(payload).toMatchObject({
-            email: "a0000000@g.chuo-u.ac.jp",
-            student_id: "a0000000"
+            email: "a0000000@g.chuo-u.ac.jp"
         });
+        expect(payload).not.toHaveProperty("student_id");
     });
 
     it("fragment モードではトークンをフラグメントに載せる", async () => {
@@ -255,7 +255,6 @@ describe("POST /api/verify", () => {
         };
         expect(body.user).toEqual({
             email: "a0000000@g.chuo-u.ac.jp",
-            student_id: "a0000000",
             domain: "g.chuo-u.ac.jp"
         });
         await expect(jwtVerify(body.token, await jwks())).resolves.toBeTruthy();

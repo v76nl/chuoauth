@@ -8,15 +8,14 @@ import {
     TOKEN_TTL_SECONDS,
     type KeyStore
 } from "../src/services/token.js";
-import type { ChuoauthUser } from "../src/types/index.js";
+import type { VerifiedGoogleUser } from "../src/types/index.js";
 import { generateTestKeys } from "./helpers.js";
 
 const ISSUER = "https://auth.example.com";
-const user: ChuoauthUser = {
+const user: VerifiedGoogleUser = {
     sub: "1234567890",
     email: "a0000000@g.chuo-u.ac.jp",
-    domain: "g.chuo-u.ac.jp",
-    student_id: "a0000000"
+    domain: "g.chuo-u.ac.jp"
 };
 
 let keys: { privateKeyPem: string; publicKeyPem: string };
@@ -93,24 +92,11 @@ describe("issueToken", () => {
             iss: ISSUER,
             sub: user.sub,
             email: user.email,
-            domain: user.domain,
-            student_id: user.student_id
+            domain: user.domain
         });
+        expect(payload).not.toHaveProperty("student_id");
         expect(payload.aud).toBeUndefined();
         expect(payload.exp! - payload.iat!).toBe(TOKEN_TTL_SECONDS);
-    });
-
-    it("student_id が null でもクレームとして含める", async () => {
-        const token = await issueToken(
-            store,
-            { ...user, student_id: null },
-            { issuer: ISSUER }
-        );
-        const { payload } = await jwtVerify(
-            token,
-            createLocalJWKSet(getJwks(store))
-        );
-        expect(payload).toHaveProperty("student_id", null);
     });
 
     it("audience を設定できる", async () => {

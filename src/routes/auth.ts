@@ -14,7 +14,6 @@ import {
     GoogleAuthError,
     verifyGoogleIdToken
 } from "../services/google.js";
-import { extractStudentId } from "../services/student-id.js";
 import { issueToken } from "../services/token.js";
 import { callbackQuerySchema, loginQuerySchema } from "../types/index.js";
 
@@ -143,17 +142,10 @@ export function authRoutes(deps: AppDeps): Hono {
                     nonce: flow.nonce
                 }
             );
-            const token = await issueToken(
-                deps.keyStore,
-                {
-                    ...googleUser,
-                    student_id: extractStudentId(googleUser.email)
-                },
-                {
-                    issuer: config.tokenIssuer,
-                    audience: config.tokenAudience
-                }
-            );
+            const token = await issueToken(deps.keyStore, googleUser, {
+                issuer: config.tokenIssuer,
+                audience: config.tokenAudience
+            });
             return c.redirect(buildClientRedirect(flow, { token }), 302);
         } catch (err) {
             if (err instanceof GoogleAuthError) {

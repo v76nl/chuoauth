@@ -1,7 +1,6 @@
 import { Hono } from "hono";
 import type { AppDeps } from "../app.js";
 import { GoogleAuthError, verifyGoogleIdToken } from "../services/google.js";
-import { extractStudentId } from "../services/student-id.js";
 import { issueToken } from "../services/token.js";
 import { verifyRequestSchema, type VerifyResponse } from "../types/index.js";
 
@@ -31,20 +30,14 @@ export function apiRoutes(deps: AppDeps): Hono {
                     allowedDomain: config.allowedDomain
                 }
             );
-            const studentId = extractStudentId(googleUser.email);
-            const token = await issueToken(
-                deps.keyStore,
-                { ...googleUser, student_id: studentId },
-                {
-                    issuer: config.tokenIssuer,
-                    audience: config.tokenAudience
-                }
-            );
+            const token = await issueToken(deps.keyStore, googleUser, {
+                issuer: config.tokenIssuer,
+                audience: config.tokenAudience
+            });
             return c.json<VerifyResponse>({
                 token,
                 user: {
                     email: googleUser.email,
-                    student_id: studentId,
                     domain: googleUser.domain
                 }
             });

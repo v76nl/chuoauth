@@ -7,10 +7,6 @@ export type VerifiedGoogleUser = {
     domain: string;
 };
 
-export type ChuoauthUser = VerifiedGoogleUser & {
-    student_id: string | null;
-};
-
 // chuoauthが発行するJWTのペイロード
 export type ChuoauthTokenPayload = {
     iss: string;
@@ -20,7 +16,6 @@ export type ChuoauthTokenPayload = {
     iat: number;
     email: string;
     domain: string;
-    student_id: string | null;
 };
 
 export const loginQuerySchema = z.object({
@@ -45,7 +40,6 @@ export type VerifyResponse = {
     token: string;
     user: {
         email: string;
-        student_id: string | null;
         domain: string;
     };
 };
