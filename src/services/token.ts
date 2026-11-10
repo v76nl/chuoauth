@@ -1,6 +1,6 @@
 import { createPrivateKey, createPublicKey, type KeyObject } from "node:crypto";
 import { exportJWK, SignJWT, type JWK } from "jose";
-import type { ChuoauthUser } from "../types/index.js";
+import type { VerifiedGoogleUser } from "../types/index.js";
 
 const ALGORITHM = "RS256";
 export const TOKEN_TTL_SECONDS = 600;
@@ -60,13 +60,12 @@ export async function createKeyStore(options: {
 
 export async function issueToken(
     store: KeyStore,
-    user: ChuoauthUser,
+    user: VerifiedGoogleUser,
     options: IssueOptions
 ): Promise<string> {
     const jwt = new SignJWT({
         email: user.email,
-        domain: user.domain,
-        student_id: user.student_id
+        domain: user.domain
     })
         .setProtectedHeader({ alg: ALGORITHM, typ: "JWT", kid: store.kid })
         .setIssuer(options.issuer)
